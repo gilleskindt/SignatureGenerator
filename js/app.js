@@ -27,11 +27,6 @@
   let linkedinIconDataUrl = "";
   let calendarIconDataUrl = "";
 
-  function getStyle() {
-    const selected = document.querySelector('input[name="signatureStyle"]:checked');
-    return selected ? selected.value : "branded";
-  }
-
   function assetUrl(filename) {
     const path = window.location.pathname.replace(/\/[^/]*$/, "/");
     return window.location.origin + path + "assets/" + encodeURIComponent(filename);
@@ -133,7 +128,6 @@
     const email = fields.email.value.trim();
     const linkedin = fields.linkedinUrl.value.trim();
     const meeting = fields.meetingUrl.value.trim();
-    const branded = getStyle() === "branded";
 
     const nameParts = name.split(/\s+/).filter(Boolean);
     const nameHtml = nameParts.map((p) => `<span>${escapeHtml(p)}</span>`).join("<span>&nbsp;</span>");
@@ -144,12 +138,10 @@
     const titleCell = title
       ? `<span style="font-size: 14px; line-height: 14px; font-family: ${FONT}; color: ${BRAND_COLOR};">${escapeHtml(title)}</span>`
       : "";
-    const logoCell = branded
-      ? `<a href="${HIGHSAIL_WEBSITE}" style="text-decoration: none;">
+    const logoCell = `<a href="${HIGHSAIL_WEBSITE}" style="text-decoration: none;">
           <img src="${escapeHtml(logoSrc())}" alt="Highsail" width="120" height="35"
             style="display: block; border: 0; width: 120px; max-width: 120px; height: auto;">
-        </a>`
-      : "";
+        </a>`;
     const phoneCell = phone
       ? `<a href="${escapeHtml(telHref(phone))}" style="${linkStyle()}">${escapeHtml(phone)}</a>`
       : "";
@@ -348,9 +340,6 @@
   });
 
   Object.values(fields).forEach((el) => el.addEventListener("input", updatePreview));
-  document.querySelectorAll('input[name="signatureStyle"]').forEach((el) => {
-    el.addEventListener("change", updatePreview);
-  });
   copyButton.addEventListener("click", copySignature);
 
   loadEmbeddedAssets();

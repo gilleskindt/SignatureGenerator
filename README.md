@@ -31,7 +31,6 @@ Then visit [http://localhost:8080](http://localhost:8080).
 | `js/app.js` | Live preview, HTML generation, copy to clipboard |
 | `assets/highsail-logo.svg` | Logo used in branded signatures |
 
-## Signature styles
+## Signature layout
 
-- **Highsail Branded** — Logo footer, divider, and LinkedIn icon
-- **Classic** — Name, title, and contact details only (no logo row)
+Branded layout with Highsail logo, vertical divider, and optional LinkedIn and calendar icons.

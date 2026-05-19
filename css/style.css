@@ -81,41 +81,6 @@ h1 {
   color: var(--text-muted);
 }
 
-.style-selector {
-  display: flex;
-  justify-content: center;
-  gap: 0.5rem;
-  margin-bottom: 1.5rem;
-  flex-wrap: wrap;
-}
-
-.style-option {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
-  padding: 0.45rem 0.9rem;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  background: var(--input-bg);
-  transition: border-color 0.15s, background 0.15s;
-}
-
-.style-option:has(input:checked) {
-  border-color: var(--accent);
-  background: var(--accent-muted);
-}
-
-.style-option input {
-  accent-color: var(--accent);
-  margin: 0;
-}
-
-.style-label {
-  font-size: 0.875rem;
-  font-weight: 500;
-}
-
 .form-grid {
   display: grid;
   grid-template-columns: minmax(120px, 140px) 1fr;
