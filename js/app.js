@@ -2,6 +2,7 @@
   const BRAND_COLOR = "#111010";
   const FONT = "Arial, Helvetica, sans-serif";
   const HIGHSAIL_WEBSITE = "https://www.highsail.com/";
+  const ORGANIZATION = "Highsail";
   const LOGO_FILE = "Highsail-Lockup-Mono-Positive@2x 1 (1).png";
   const LINKEDIN_ICON_FILE = "linkedin-icon.png";
   const TABLE_WIDTH = 520;
@@ -9,7 +10,6 @@
   const fields = {
     name: document.getElementById("name"),
     title: document.getElementById("title"),
-    organization: document.getElementById("organization"),
     phone: document.getElementById("phone"),
     email: document.getElementById("email"),
     linkedinUrl: document.getElementById("linkedinUrl"),
@@ -107,7 +107,6 @@
   function buildSignatureHtml() {
     const name = fields.name.value.trim();
     const title = fields.title.value.trim();
-    const org = fields.organization.value.trim();
     const phone = fields.phone.value.trim();
     const email = fields.email.value.trim();
     const linkedin = fields.linkedinUrl.value.trim();
@@ -143,13 +142,11 @@
         </tr>`
       : "";
 
-    const orgRow = org
-      ? `<tr>
+    const orgRow = `<tr>
           <td style="padding: 0; font-size: 13px; line-height: 18px; font-family: ${FONT}; color: ${BRAND_COLOR}; opacity: ${branded ? "0.6" : "0.75"};">
-            ${escapeHtml(org)}
+            ${escapeHtml(ORGANIZATION)}
           </td>
-        </tr>`
-      : "";
+        </tr>`;
 
     const contactSection = contactRows
       ? `<td width="14" style="font-size: 0; line-height: 0;">&nbsp;</td>
