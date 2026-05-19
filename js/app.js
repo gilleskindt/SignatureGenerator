@@ -4,7 +4,7 @@
   const HIGHSAIL_WEBSITE = "https://www.highsail.com/";
   const LOGO_FILE = "Highsail-Lockup-Mono-Positive@2x 1 (1).png";
   const LINKEDIN_ICON_FILE = "linkedin-icon.png";
-  const CALENDAR_ICON_FILE = "calendar-round.svg";
+  const CALENDAR_ICON_EMBEDDED = "data:image/png;base64,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";
   const TABLE_WIDTH = 520;
 
   const fields = {
@@ -25,7 +25,6 @@
   let profilePicDataUrl = "";
   let logoDataUrl = "";
   let linkedinIconDataUrl = "";
-  let calendarIconDataUrl = "";
 
   function assetUrl(filename) {
     const path = window.location.pathname.replace(/\/[^/]*$/, "/");
@@ -41,7 +40,7 @@
   }
 
   function calendarIconSrc() {
-    return calendarIconDataUrl || assetUrl(CALENDAR_ICON_FILE);
+    return CALENDAR_ICON_EMBEDDED;
   }
 
   async function loadAssetAsDataUrl(url) {
@@ -74,16 +73,6 @@
         loadAssetAsDataUrl(assetUrl(LINKEDIN_ICON_FILE))
           .then((dataUrl) => {
             linkedinIconDataUrl = dataUrl;
-          })
-          .catch(() => {})
-      );
-    }
-
-    if (!calendarIconDataUrl) {
-      tasks.push(
-        loadAssetAsDataUrl(assetUrl(CALENDAR_ICON_FILE))
-          .then((dataUrl) => {
-            calendarIconDataUrl = dataUrl;
           })
           .catch(() => {})
       );
