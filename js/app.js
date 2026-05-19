@@ -3,7 +3,7 @@
   const FONT = "Arial, Helvetica, sans-serif";
   const HIGHSAIL_WEBSITE = "https://www.highsail.com/";
   const LOGO_FILE = "Highsail-Lockup-Mono-Positive@2x 1 (1).png";
-  const LINKEDIN_ICON = "assets/linkedin-icon.png";
+  const LINKEDIN_ICON_FILE = "linkedin-icon.png";
   const TABLE_WIDTH = 520;
 
   const fields = {
@@ -24,36 +24,63 @@
 
   let profilePicDataUrl = "";
   let logoDataUrl = "";
+  let linkedinIconDataUrl = "";
 
   function getStyle() {
     const selected = document.querySelector('input[name="signatureStyle"]:checked');
     return selected ? selected.value : "branded";
   }
 
-  function logoUrl() {
+  function assetUrl(filename) {
     const path = window.location.pathname.replace(/\/[^/]*$/, "/");
-    return window.location.origin + path + "assets/" + encodeURIComponent(LOGO_FILE);
+    return window.location.origin + path + "assets/" + encodeURIComponent(filename);
   }
 
   function logoSrc() {
-    return logoDataUrl || logoUrl();
+    return logoDataUrl || assetUrl(LOGO_FILE);
   }
 
-  async function loadLogo() {
-    try {
-      const response = await fetch(logoUrl());
-      if (!response.ok) return;
-      const blob = await response.blob();
-      logoDataUrl = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-      });
-      updatePreview();
-    } catch {
-      /* hosted URL used as fallback */
+  function linkedinIconSrc() {
+    return linkedinIconDataUrl || assetUrl(LINKEDIN_ICON_FILE);
+  }
+
+  async function loadAssetAsDataUrl(url) {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error("Failed to load " + url);
+    const blob = await response.blob();
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  }
+
+  async function loadEmbeddedAssets() {
+    const tasks = [];
+
+    if (!logoDataUrl) {
+      tasks.push(
+        loadAssetAsDataUrl(assetUrl(LOGO_FILE))
+          .then((dataUrl) => {
+            logoDataUrl = dataUrl;
+          })
+          .catch(() => {})
+      );
     }
+
+    if (!linkedinIconDataUrl) {
+      tasks.push(
+        loadAssetAsDataUrl(assetUrl(LINKEDIN_ICON_FILE))
+          .then((dataUrl) => {
+            linkedinIconDataUrl = dataUrl;
+          })
+          .catch(() => {})
+      );
+    }
+
+    await Promise.all(tasks);
+    updatePreview();
   }
 
   function normalizeUrl(url) {
@@ -139,7 +166,7 @@
     if (branded) {
       const social = linkedin
         ? `<a href="${escapeHtml(linkedin)}" style="text-decoration: none; line-height: 0;">
-             <img src="${LINKEDIN_ICON}" alt="LinkedIn" width="24" height="24"
+             <img src="${escapeHtml(linkedinIconSrc())}" alt="LinkedIn" width="24" height="24"
                style="display: block; border: 0; width: 24px; height: 24px;">
            </a>`
         : "&nbsp;";
@@ -272,9 +299,7 @@
   }
 
   async function copySignature() {
-    if (!logoDataUrl) {
-      await loadLogo();
-    }
+    await loadEmbeddedAssets();
 
     const html = buildSignatureHtml();
     const plain = preview.innerText || "";
@@ -315,5 +340,5 @@
   });
   copyButton.addEventListener("click", copySignature);
 
-  loadLogo().finally(updatePreview);
+  loadEmbeddedAssets();
 })();
