@@ -2,9 +2,9 @@
   const BRAND_COLOR = "#111010";
   const FONT = "Arial, Helvetica, sans-serif";
   const HIGHSAIL_WEBSITE = "https://www.highsail.com/";
-  const ORGANIZATION = "Highsail";
   const LOGO_FILE = "Highsail-Lockup-Mono-Positive@2x 1 (1).png";
   const LINKEDIN_ICON_FILE = "linkedin-icon.png";
+  const CALENDAR_ICON_FILE = "calendar-round.svg";
   const TABLE_WIDTH = 520;
 
   const fields = {
@@ -25,6 +25,7 @@
   let profilePicDataUrl = "";
   let logoDataUrl = "";
   let linkedinIconDataUrl = "";
+  let calendarIconDataUrl = "";
 
   function getStyle() {
     const selected = document.querySelector('input[name="signatureStyle"]:checked');
@@ -42,6 +43,10 @@
 
   function linkedinIconSrc() {
     return linkedinIconDataUrl || assetUrl(LINKEDIN_ICON_FILE);
+  }
+
+  function calendarIconSrc() {
+    return calendarIconDataUrl || assetUrl(CALENDAR_ICON_FILE);
   }
 
   async function loadAssetAsDataUrl(url) {
@@ -79,6 +84,16 @@
       );
     }
 
+    if (!calendarIconDataUrl) {
+      tasks.push(
+        loadAssetAsDataUrl(assetUrl(CALENDAR_ICON_FILE))
+          .then((dataUrl) => {
+            calendarIconDataUrl = dataUrl;
+          })
+          .catch(() => {})
+      );
+    }
+
     await Promise.all(tasks);
     updatePreview();
   }
@@ -104,6 +119,13 @@
     return `color: ${BRAND_COLOR}; font-size: 12px; font-family: ${FONT}; text-decoration: none; white-space: nowrap;`;
   }
 
+  /** Vertical spacing between stacked rows (email-safe). */
+  function rowPadding(index, total) {
+    if (total <= 1 || index >= total - 1) return "padding: 0;";
+    const gapAfter = index === 0 ? 0 : 8;
+    return `padding: 0 0 ${gapAfter}px 0;`;
+  }
+
   function buildSignatureHtml() {
     const name = fields.name.value.trim();
     const title = fields.title.value.trim();
@@ -116,83 +138,96 @@
     const nameParts = name.split(/\s+/).filter(Boolean);
     const nameHtml = nameParts.map((p) => `<span>${escapeHtml(p)}</span>`).join("<span>&nbsp;</span>");
 
-    let contactRows = "";
-    if (phone) {
-      contactRows += `<tr><td style="padding: 0 0 2px 0; white-space: nowrap;"><a href="${escapeHtml(telHref(phone))}" style="${linkStyle()}">${escapeHtml(phone)}</a></td></tr>`;
-    }
-    if (email) {
-      contactRows += `<tr><td style="padding: 0 0 2px 0; white-space: nowrap;"><a href="mailto:${escapeHtml(email)}" style="${linkStyle()}">${escapeHtml(email)}</a></td></tr>`;
+    const nameCell = name
+      ? `<span style="font-size: 16px; line-height: 22px; font-family: ${FONT}; color: ${BRAND_COLOR}; font-weight: bold;">${nameHtml}</span>`
+      : "";
+    const titleCell = title
+      ? `<span style="font-size: 14px; line-height: 14px; font-family: ${FONT}; color: ${BRAND_COLOR};">${escapeHtml(title)}</span>`
+      : "";
+    const logoCell = branded
+      ? `<a href="${HIGHSAIL_WEBSITE}" style="text-decoration: none;">
+          <img src="${escapeHtml(logoSrc())}" alt="Highsail" width="120" height="35"
+            style="display: block; border: 0; width: 120px; max-width: 120px; height: auto;">
+        </a>`
+      : "";
+    const phoneCell = phone
+      ? `<a href="${escapeHtml(telHref(phone))}" style="${linkStyle()}">${escapeHtml(phone)}</a>`
+      : "";
+    const emailCell = email
+      ? `<a href="mailto:${escapeHtml(email)}" style="${linkStyle()}">${escapeHtml(email)}</a>`
+      : "";
+
+    const socialCells = [];
+    if (linkedin) {
+      socialCells.push(
+        `<td style="padding: 0 8px 0 0; vertical-align: middle;">
+          <a href="${escapeHtml(normalizeUrl(linkedin))}" style="text-decoration: none; line-height: 0;">
+            <img src="${escapeHtml(linkedinIconSrc())}" alt="LinkedIn" width="24" height="24"
+              style="display: block; border: 0; width: 24px; height: 24px;">
+          </a>
+        </td>`
+      );
     }
     if (meeting) {
-      contactRows += `<tr><td style="padding: 0; white-space: nowrap;"><a href="${escapeHtml(normalizeUrl(meeting))}" style="${linkStyle()}">Book a meeting</a></td></tr>`;
+      socialCells.push(
+        `<td style="padding: 0; vertical-align: middle;">
+          <a href="${escapeHtml(normalizeUrl(meeting))}" style="text-decoration: none; line-height: 0;">
+            <img src="${escapeHtml(calendarIconSrc())}" alt="Book a meeting" width="24" height="24"
+              style="display: block; border: 0; width: 29px; height: 29px;">
+          </a>
+        </td>`
+      );
+    }
+    const socialCell = socialCells.length
+      ? `<table cellpadding="0" cellspacing="0" border="0"><tbody><tr>${socialCells.join("")}</tr></tbody></table>`
+      : "";
+
+    const pairs = [];
+    function addPair(left, right) {
+      if (left || right) {
+        pairs.push({
+          left: left || "&nbsp;",
+          right: right || "&nbsp;",
+        });
+      }
     }
 
-    const profileCell = profilePicDataUrl
-      ? `<td width="72" style="vertical-align: middle; padding: 0 14px 0 0;">
-          <img src="${profilePicDataUrl}" alt="" width="64" height="64"
-            style="width: 64px; height: 64px; border-radius: 32px; display: block; border: 0;">
-        </td>`
-      : "";
+    addPair(nameCell, phoneCell);
+    addPair(titleCell, emailCell);
+    addPair(logoCell, socialCell);
 
-    const titleRow = title
-      ? `<tr>
-          <td style="padding: 0; font-size: 14px; line-height: 20px; font-family: ${FONT}; color: ${BRAND_COLOR};">
-            ${escapeHtml(title)}
-          </td>
-        </tr>`
-      : "";
+    const hasContact = Boolean(phone || email || linkedin || meeting);
+    const rowCount = pairs.length;
 
-    const orgRow = `<tr>
-          <td style="padding: 0; font-size: 13px; line-height: 18px; font-family: ${FONT}; color: ${BRAND_COLOR}; opacity: ${branded ? "0.6" : "0.75"};">
-            ${escapeHtml(ORGANIZATION)}
-          </td>
-        </tr>`;
+    if (rowCount === 0) {
+      return `<table cellpadding="0" cellspacing="0" border="0" width="${TABLE_WIDTH}" style="border-collapse: collapse; font-family: ${FONT}; color: ${BRAND_COLOR};"><tbody><tr><td>&nbsp;</td></tr></tbody></table>`;
+    }
 
-    const contactSection = contactRows
-      ? `<td width="14" style="font-size: 0; line-height: 0;">&nbsp;</td>
-         <td width="1" style="background-color: ${BRAND_COLOR}; font-size: 0; line-height: 0;">&nbsp;</td>
-         <td width="14" style="font-size: 0; line-height: 0;">&nbsp;</td>
-         <td style="vertical-align: middle; padding: 0; white-space: nowrap;">
-           <table cellpadding="0" cellspacing="0" border="0" style="font-family: ${FONT};">
-             <tbody>${contactRows}</tbody>
-           </table>
-         </td>`
-      : "";
+    const profileCell =
+      profilePicDataUrl &&
+      `<td rowspan="${rowCount}" width="72" style="vertical-align: middle; padding: 0 14px 0 0;">
+        <img src="${profilePicDataUrl}" alt="" width="64" height="64"
+          style="width: 64px; height: 64px; border-radius: 32px; display: block; border: 0;">
+      </td>`;
 
-    let footerRow = "";
-    if (branded) {
-      const social = linkedin
-        ? `<a href="${escapeHtml(linkedin)}" style="text-decoration: none; line-height: 0;">
-             <img src="${escapeHtml(linkedinIconSrc())}" alt="LinkedIn" width="24" height="24"
-               style="display: block; border: 0; width: 24px; height: 24px;">
-           </a>`
-        : "&nbsp;";
+    const dividerCell = `<td rowspan="${rowCount}" width="1" bgcolor="${BRAND_COLOR}"
+      style="background-color: ${BRAND_COLOR}; width: 1px; font-size: 0; line-height: 0;">&nbsp;</td>`;
 
-      footerRow = `
-        <tr><td colspan="1" height="14" style="font-size: 0; line-height: 0;">&nbsp;</td></tr>
-        <tr>
-          <td style="width: 100%; height: 1px; background-color: ${BRAND_COLOR}; font-size: 0; line-height: 0;">&nbsp;</td>
-        </tr>
-        <tr><td height="10" style="font-size: 0; line-height: 0;">&nbsp;</td></tr>
-        <tr>
-          <td>
-            <table cellpadding="0" cellspacing="0" border="0" width="100%" style="font-family: ${FONT};">
-              <tbody>
-                <tr>
-                  <td style="vertical-align: middle; padding: 0;">
-                    <a href="${HIGHSAIL_WEBSITE}" style="text-decoration: none;">
-                      <img src="${escapeHtml(logoSrc())}" alt="Highsail" width="120" height="35"
-                        style="display: block; border: 0; width: 120px; max-width: 120px; height: auto;">
-                    </a>
-                  </td>
-                  <td style="vertical-align: middle; text-align: right; padding: 0; width: 40px;">
-                    ${social}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </td>
-        </tr>`;
+    let bodyRows = "";
+    for (let i = 0; i < rowCount; i++) {
+      const pad = rowPadding(i, rowCount);
+      const contactCols = hasContact
+        ? `<td width="14" style="font-size: 0; line-height: 0;">&nbsp;</td>
+           ${i === 0 ? dividerCell : ""}
+           <td width="14" style="font-size: 0; line-height: 0;">&nbsp;</td>
+           <td style="vertical-align: middle; ${pad} white-space: nowrap; font-family: ${FONT};">${pairs[i].right}</td>`
+        : "";
+
+      bodyRows += `<tr>
+        ${i === 0 ? profileCell || "" : ""}
+        <td style="vertical-align: middle; ${pad} white-space: nowrap; font-family: ${FONT}; color: ${BRAND_COLOR};">${pairs[i].left}</td>
+        ${contactCols}
+      </tr>`;
     }
 
     return `<table cellpadding="0" cellspacing="0" border="0" width="${TABLE_WIDTH}" style="border-collapse: collapse; font-family: ${FONT}; color: ${BRAND_COLOR};">
@@ -200,29 +235,10 @@
         <tr>
           <td style="padding: 0;">
             <table cellpadding="0" cellspacing="0" border="0" style="border-collapse: collapse; font-family: ${FONT};">
-              <tbody>
-                <tr>
-                  ${profileCell}
-                  <td style="vertical-align: middle; padding: 0;">
-                    <table cellpadding="0" cellspacing="0" border="0" style="border-collapse: collapse; font-family: ${FONT};">
-                      <tbody>
-                        <tr>
-                          <td style="padding: 0 0 2px 0; font-size: 16px; line-height: 22px; font-family: ${FONT}; color: ${BRAND_COLOR}; font-weight: bold;">
-                            ${nameHtml}
-                          </td>
-                        </tr>
-                        ${titleRow}
-                        ${orgRow}
-                      </tbody>
-                    </table>
-                  </td>
-                  ${contactSection}
-                </tr>
-              </tbody>
+              <tbody>${bodyRows}</tbody>
             </table>
           </td>
         </tr>
-        ${footerRow}
       </tbody>
     </table>`;
   }
